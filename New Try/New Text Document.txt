@@ -1,0 +1,57 @@
+variable "environment" {
+  default = "SIT"
+}
+
+variable "project_name" {
+  default = "MMD"
+}
+
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# VPC
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = merge(
+    {
+      Name = "${var.project_name}-vpc"
+    },
+    local.common_tags
+  )
+}
+
+# RDS
+resource "aws_db_instance" "main" {
+  allocated_storage    = 20
+  engine               = "mysql"
+  engine_version       = "5.7"
+  instance_class       = "db.t2.micro"
+  name                 = "mydb"
+  username             = "foo"
+  password             = "foobarbaz"
+  parameter_group_name = "default.mysql5.7"
+
+  tags = merge(
+    {
+      Name = "${var.project_name}-rds"
+    },
+    local.common_tags
+  )
+}
+
+# ECS Cluster
+resource "aws_ecs_cluster" "main" {
+  name = "${var.project_name}-ecs-cluster"
+
+  tags = merge(
+    {
+      Name = "${var.project_name}-ecs"
+    },
+    local.common_tags
+  )
+}
